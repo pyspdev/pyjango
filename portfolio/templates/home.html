@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+{% block content %}
+{% load static %}
+<header class="row bg-black">
+    <div class="col-md-4">
+<img src="{% static 'perfil.jpeg' %}" alt="" width="90" height="90">
+    </div>
+    <div class="col-md-8 my-auto">
+        <h1>Yo soy <strong>Carlos Barcia<strong></h1>
+            <h3>Diseñador web</h3>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras diam ipsum, pretium quis dapibus maximus, congue at massa. Quisque dapibus vulputate fermentum. Quisque eu lacus tincidunt tortor fermentum gravida nec nec risus. Nullam consequat sit amet odio at feugiat. Vivamus at ante vitae arcu luctus luctus nec a augue. Nullam faucibus nibh quis lacus vehicula pulvinar ut ac ante. Etiam eget iaculis lacus. Sed turpis ante, imperdiet vel libero ac, commodo rutrum lectus. Vestibulum eget ultrices dolor, 
+</p>
+            <a class="btn btn-primary btn-lg rounded-0 my-3" href="{% static 'curriculum.pdf' %}" target="_blank">
+                    Download CV </a>
+                    </div>
+                </header>
+                <div class="row my-4 text-center">
+    <h1>Bienvenido a Casa</h1>
+    <p>Vamos hacer las cosas bien</p>
+{% for project in projects %}
+<div class="col-md-4 p-4">
+    <div class="card bg-black card-project">
+  <img src="{{project.image.url}}" alt="{{project.title}}" class="card-img-top">
+  <div class="card-body">      
+    <h2>{{project.title}}</h2>
+    <p>{{project.description}}</p>
+    <img src="{{project.image.url}}" alt="{{project.title}}" width="60" height="60">
+    <br>
+    {% if project.url %}
+        <a href="{{project.url}}" class="btn btn-light rounded-0 btn-sm" target="_blank"> {{project.url}}</a>
+        {% endif %}
+</div>
+</div>
+</div>
+        {% endfor %}
+{% endblock %}      
+</div>  
