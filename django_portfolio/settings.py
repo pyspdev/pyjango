@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure--5uicr%c%@)*@-je*q(jp5al908j&y_y0zu4k$k&!f%$)r9p=q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pyjango.pythonanywhere.com']
 
 
 # Application definition
@@ -77,11 +77,11 @@ WSGI_APPLICATION = 'django_portfolio.wsgi.application'
 DATABASES = {
     'default': {
        'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'railway',
-       'USER': 'root',
-       'PASSWORD': 'pgB81aHMo3Lk28OPXWXZ',
-       'HOST':'containers-us-west-158.railway.app',
-       'PORT':'6471',
+       'NAME': 'pyjango$default',
+       'USER': 'pyjango',
+       'PASSWORD': 'Brainstorm13',
+       'HOST':'pyjango.mysql.pythonanywhere-services.com',
+       'PORT':'3306',
     }
 }
 
