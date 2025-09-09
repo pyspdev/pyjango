@@ -1,41 +1,49 @@
 {% extends 'layout.html' %}
-{% block content %}
 {% load static %}
+{% block content %}
 <header class="row bg-black">
     <div class="col-md-4">
-<img src="{% static 'perfil.jpeg' %}" alt="" width="90" height="90">
+        <!-- Reemplaza la imagen de perfil genérica con tu foto -->
+        <img src="{% static 'perfil.PNG' %}" alt="Julio Cesar Moreno Ramon" width="90" height="90">
     </div>
     <div class="col-md-8 my-auto">
         <h1>Yo soy <strong>Julio Cesar Moreno Ramon</strong></h1>
-            <h3>Ingeniero de Datos / Desarrollador de ETL</h3>
-            <p>Con más de 15 años de experiencia, he trabajado con datos en roles de administración y
-               diseño de soluciones ETL. Me he especializado en la creación de modelos, data marts y 
-               data warehouses, utilizando pipelines, cubos y visualizaciones para diversos proyectos.
-               En los últimos años, he enfocado mi trabajo en tecnologías de la nube,
-               participando en la ingesta y transformación de datos, así como en migraciones a
-               Cloud SQL y BigQuery, usando herramientas como Dataflow, Dataproc y Cloud Composer.
-            </p>
-            <a class="btn btn-primary btn-lg rounded-0 my-3" href="{% static 'curriculum.pdf' %}" target="_blank">
-                    Descargar CV </a>
-                    </div>
-                </header>
-                <div class="row my-4 text-center">
+        <h3>Ingeniero de Datos / Desarrollador de ETL</h3>
+        <p>Con más de 15 años de experiencia, he trabajado con datos en roles de administración y diseño de soluciones ETL. Me he especializado en la creación de modelos, data marts y data warehouses, utilizando pipelines, cubos y visualizaciones para diversos proyectos. En los últimos años, he enfocado mi trabajo en tecnologías de la nube, participando en la ingesta y transformación de datos, así como en migraciones a Cloud SQL y BigQuery, usando herramientas como Dataflow, Dataproc y Cloud Composer.</p>
+        <div class="d-flex align-items-center">
+            <!-- Botón para descargar el CV -->
+            <a class="btn btn-primary btn-lg rounded-0 me-3" href="{% static 'curriculum.pdf' %}" target="_blank">
+                Descargar CV
+            </a>
+            <!-- Enlace a LinkedIn con icono -->
+            <a href="https://www.linkedin.com/in/jcesarmr/" target="_blank" class="text-white text-decoration-none d-flex align-items-center">
+                <!-- Icono de LinkedIn en azul, creado con SVG para evitar dependencias de imágenes -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-linkedin" viewBox="0 0 16 16" style="color: #0e76a8;">
+                  <path d="M0 1.146C0 .513.526 0 1.176 0h13.648c.65 0 1.176.513 1.176 1.146v13.708c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146zm4.99 1.442h-.995a.49.49 0 0 0-.495.495v8.941a.49.49 0 0 0 .495.495h.995a.49.49 0 0 0 .495-.495V3.083a.49.49 0 0 0-.495-.495zM7.224 4.152a.49.49 0 0 0-.495-.495h-1.29a.49.49 0 0 0-.495.495v1.29c0 .272.223.495.495.495h1.29a.49.49 0 0 0 .495-.495v-1.29zm3.504 5.922a.49.49 0 0 0-.495-.495H8.94a.49.49 0 0 0-.495.495v.995a.49.49 0 0 0 .495.495h1.29a.49.49 0 0 0 .495-.495v-.995zM12.91 3.083a.49.49 0 0 0-.495-.495H11.12a.49.49 0 0 0-.495.495v.995a.49.49 0 0 0 .495.495h1.29a.49.49 0 0 0 .495-.495V3.083zM15.485 1.146c0-.633-.526-1.146-1.176-1.146H1.176C.526 0 0 .513 0 1.146v13.708c0 .633.526 1.146 1.176 1.146h13.648c.65 0 1.176-.513 1.176-1.146V1.146zM15 14.854c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146C0 .513.526 0 1.176 0h13.648c.65 0 1.176.513 1.176 1.146v13.708zM14.485 1.146c0-.633-.526-1.146-1.176-1.146H1.176C.526 0 0 .513 0 1.146v13.708c0 .633.526 1.146 1.176 1.146h13.648c.65 0 1.176-.513 1.176-1.146V1.146zM15 14.854c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146z"/>
+                </svg>
+                <span class="ms-2">LinkedIn</span>
+            </a>
+        </div>
+    </div>
+</header>
+<div class="row my-4 text-center">
     <h1>Bienvenidos a mi portafolio de proyectos</h1>
     <p>Aquí verán una muestra de mi trabajo y experiencia</p>
-{% for project in projects %}
-<div class="col-md-4 p-4">
-    <div class="card bg-black card-project">
-  <img src="{{project.image.url}}" alt="{{project.title}}" class="card-img-top">
-  <div class="card-body">      
-    <h2>{{project.title}}</h2>
-    <p>{{project.description}}</p>
-    <img src="{{project.image.url}}" alt="{{project.title}}" width="60" height="60">
-    <br>
-    {% if project.url %}
-        <a href="{{project.url}}" class="btn btn-light rounded-0 btn-sm" target="_blank"> {{project.url}}</a>
-        {% endif %}
+    {% for project in projects %}
+    <div class="col-md-4 p-4">
+        <div class="card bg-black card-project">
+            <img src="{{ project.image.url }}" alt="{{ project.title }}" class="card-img-top">
+            <div class="card-body">      
+                <h2>{{ project.title }}</h2>
+                <p>{{ project.description }}</p>
+                <img src="{{ project.image.url }}" alt="{{ project.title }}" width="60" height="60">
+                <br>
+                {% if project.url %}
+                    <a href="{{ project.url }}" class="btn btn-light rounded-0 btn-sm" target="_blank">{{ project.url }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
-</div>
-</div>
-        {% endfor %}
 {% endblock %}
