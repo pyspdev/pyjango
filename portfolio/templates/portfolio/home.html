@@ -36,7 +36,18 @@
             <div class="card-body">      
                 <h2>{{ project.title }}</h2>
                 <p>{{ project.description }}</p>
-                <img src="{{ project.image.url }}" alt="{{ project.title }}" width="60" height="60">
+                <!-- Nueva sección para tecnologías -->
+                <div class="mt-3">
+                    <strong>Tecnologías Utilizadas:</strong>
+                    <ul class="list-unstyled d-flex flex-wrap justify-content-center mt-2">
+                        <!-- Ejemplo: Reemplaza con tus tecnologías -->
+                        <li class="badge bg-primary text-white mx-1 my-1">Python</li>
+                        <li class="badge bg-primary text-white mx-1 my-1">GCP</li>
+                        <li class="badge bg-primary text-white mx-1 my-1">Dataflow</li>
+                        <li class="badge bg-primary text-white mx-1 my-1">BigQuery</li>
+                    </ul>
+                </div>
+                <!-- Fin de nueva sección -->
                 <br>
                 {% if project.url %}
                     <a href="{{ project.url }}" class="btn btn-light rounded-0 btn-sm" target="_blank">{{ project.url }}</a>
@@ -45,6 +56,29 @@
         </div>
     </div>
     {% endfor %}
+</div>
+
+<!-- Nueva sección de Testimonios -->
+<div class="row my-5">
+    <div class="col-12 text-center">
+        <h2>Lo que dicen de mi</h2>
+    </div>
+    <div class="col-md-6 offset-md-3 mt-4">
+        <div class="card bg-black text-white p-4">
+            <p class="fst-italic">"Julio es un profesional altamente competente en el área de ingeniería de datos. Su conocimiento en pipelines y migraciones en la nube fue crucial para el éxito de nuestro proyecto."</p>
+            <footer class="blockquote-footer text-end mt-2">
+                <cite title="Source Title">Jesus Cienega</cite>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- Nueva sección de Contacto -->
+<div class="row text-center mt-5">
+    <div class="col">
+        <h2 class="mb-4">Hablemos</h2>
+        <p>¿Tienes un proyecto en mente? Contáctame para discutir cómo puedo ayudarte.</p>
+    </div>
 </div>
 
 <!-- Enlace a GitHub añadido en la parte inferior -->
