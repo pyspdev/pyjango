@@ -4,7 +4,7 @@
 <header class="row bg-black">
     <div class="col-md-4">
         <!-- Reemplaza la imagen de perfil genérica con tu foto -->
-        <img src="{% static 'perfil.PNG' %}" alt="Julio Cesar Moreno Ramon" width="90" height="90">
+        <img src="{% static 'perfil.jpeg' %}" alt="Julio Cesar Moreno Ramon" width="90" height="90">
     </div>
     <div class="col-md-8 my-auto">
         <h1>Yo soy <strong>Julio Cesar Moreno Ramon</strong></h1>
@@ -16,7 +16,7 @@
                 Descargar CV
             </a>
             <!-- Enlace a LinkedIn con icono -->
-            <a href="https://www.linkedin.com/in/jcesarmr/" target="_blank" class="text-white text-decoration-none d-flex align-items-center">
+            <a href="https://www.linkedin.com/in/julio-césar-moreno-ramón/" target="_blank" class="text-white text-decoration-none d-flex align-items-center">
                 <!-- Icono de LinkedIn en azul, creado con SVG para evitar dependencias de imágenes -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-linkedin" viewBox="0 0 16 16" style="color: #0e76a8;">
                   <path d="M0 1.146C0 .513.526 0 1.176 0h13.648c.65 0 1.176.513 1.176 1.146v13.708c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146zm4.99 1.442h-.995a.49.49 0 0 0-.495.495v8.941a.49.49 0 0 0 .495.495h.995a.49.49 0 0 0 .495-.495V3.083a.49.49 0 0 0-.495-.495zM7.224 4.152a.49.49 0 0 0-.495-.495h-1.29a.49.49 0 0 0-.495.495v1.29c0 .272.223.495.495.495h1.29a.49.49 0 0 0 .495-.495v-1.29zm3.504 5.922a.49.49 0 0 0-.495-.495H8.94a.49.49 0 0 0-.495.495v.995a.49.49 0 0 0 .495.495h1.29a.49.49 0 0 0 .495-.495v-.995zM12.91 3.083a.49.49 0 0 0-.495-.495H11.12a.49.49 0 0 0-.495.495v.995a.49.49 0 0 0 .495.495h1.29a.49.49 0 0 0 .495-.495V3.083zM15.485 1.146c0-.633-.526-1.146-1.176-1.146H1.176C.526 0 0 .513 0 1.146v13.708c0 .633.526 1.146 1.176 1.146h13.648c.65 0 1.176-.513 1.176-1.146V1.146zM15 14.854c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146C0 .513.526 0 1.176 0h13.648c.65 0 1.176.513 1.176 1.146v13.708zM14.485 1.146c0-.633-.526-1.146-1.176-1.146H1.176C.526 0 0 .513 0 1.146v13.708c0 .633.526 1.146 1.176 1.146h13.648c.65 0 1.176-.513 1.176-1.146V1.146zM15 14.854c0 .633-.526 1.146-1.176 1.146H1.176C.526 16 0 15.487 0 14.854V1.146z"/>
@@ -46,4 +46,14 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- Enlace a GitHub añadido en la parte inferior -->
+<div class="row text-center mt-5">
+    <div class="col">
+        <a href="https://github.com/pyspdev" target="_blank" class="text-white text-decoration-none">
+            <h5 class="text-white">Visita mi GitHub</h5>
+        </a>
+    </div>
+</div>
+
 {% endblock %}
