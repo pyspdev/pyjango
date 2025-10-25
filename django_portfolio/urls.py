@@ -20,15 +20,17 @@ from django.conf.urls.static import static
 from django.conf import settings
 from portfolio import views
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    # Nueva ruta para el Data Hub.
-    # Usamos TemplateView para cargar directamente data_hub.html.
-    # El 'template_name' debe coincidir con el nombre de tu archivo HTML.
-    path('data_hub/', TemplateView.as_view(template_name='data_hub.html'), name='data_hub'),
+    # 1. Rutas para la página principal y el blog (probablemente ya están bien)
     path('', views.home, name='home'),
-    path('blog/', include ('blog.urls'))
+    path('blog/', include ('blog.urls')),
+    # 2. Nueva ruta para el Data Hub. Usamos 'include' para que las rutas
+    # de la aplicación 'portfolio' manejen todo lo que empiece con 'data-hub/'.
+    # Si la ruta es solo 'data-hub/', esto apuntará a la URL principal de portfolio/urls.py
+        # path('data_hub/', TemplateView.as_view(template_name='data_hub.html'), name='data_hub'),
+    path('data-hub/', include('portfolio.urls')), 
 ]
 urlpatterns += static(settings.MEDIA_URL,
                       document_root=settings.MEDIA_ROOT)
