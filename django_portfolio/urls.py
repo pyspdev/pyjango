@@ -22,6 +22,11 @@ from portfolio import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Nueva ruta para el Data Hub.
+    # Usamos TemplateView para cargar directamente data_hub.html.
+    # El 'template_name' debe coincidir con el nombre de tu archivo HTML.
+    path('data_hub/', TemplateView.as_view(template_name='data_hub.html'), name='data_hub'),
     path('', views.home, name='home'),
     path('blog/', include ('blog.urls'))
 ]
