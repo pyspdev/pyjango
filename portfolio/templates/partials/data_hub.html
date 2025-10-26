@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Hub Persistente</title>
+    <!-- Carga de Tailwind CSS para estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Asegurar que el contenedor principal ocupe toda la altura */
+        html, body, #root { height: 100%; margin: 0; padding: 0; } 
+    </style>
+
+    <!-- Carga de Librerías de React y Babel (para transpilar el JSX) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Carga de Módulos de Firebase (v11.6.1) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Importar todas las funciones de Firestore necesarias
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-lite.js";
+
+        // Establecer nivel de log para depuración de Firestore
+        setLogLevel('debug');
+
+        // FIGURACIÓN DE FIREBASE (Configuración obtenida de tu imagen)
+        const baseConfig = {
+            "apiKey": "AIzaSyBJZxuwRulQNQFozQZxxcZB6SccB1k",
+            "authDomain": "pyjango-cd5f.firebaseapp.com",
+            "projectId": "pyjango-cd5f",
+            "storageBucket": "pyjango-cd5f.appspot.com",
+            "messagingSenderId": "373327860323",
+            "appId": "1:373327860323:web:ee0aaab003fdf2e4638de56",
+        };
+        
+        const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = rawAppId.replace(/[^a-zA-Z0-9-]/g, '_'); 
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined'
+            ? JSON.parse(__firebase_config)
+            : baseConfig;
+        
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined'
+            ? __initial_auth_token
+            : null;
+
+        /**
+         * Función de inicialización asíncrona (Solo JS puro. NO JSX aquí)
+         */
+        window.initializeFirebaseApp = async () => {
+            try {
+                if (!firebaseConfig || Object.keys(firebaseConfig).length < 5) {
+                    throw new Error("La configuración de Firebase está vacía o es inválida.");
+                }
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                const auth = getAuth(app);
+                let globalUserId = null;
+                
+                // Manejo de autenticación con el token inicial
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Esperar a que el estado de autenticación cambie y obtener el UID
+                await new Promise((resolve) => {
+                    const unsubscribe = onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            globalUserId = user.uid;
+                        } else {
+                            globalUserId = crypto.randomUUID(); // Fallback a ID temporal
+                        }
+                        unsubscribe();
+                        resolve();
+                    });
+                });
+
+                // Devolver el objeto con la instancia de DB, el ID de usuario y las funciones de Firestore
+                return { 
+                    db, 
+                    auth, 
+                    globalUserId, 
+                    appId,
+                    // Devolver las funciones para que el componente React las use
+                    firestore: { doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, getDocs }
+                };
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase y autenticar:", error);
+                // Mostrar el error usando una cadena de HTML
+                document.getElementById('root').innerHTML = `
+                    <div class="fixed inset-0 flex items-center justify-center bg-red-100/90 p-4 h-full">
+                        <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-red-500 text-center max-w-sm">
+                            <h2 class="text-xl font-bold text-red-700 mb-2">Error de Conexión</h2>
+                            <p class="text-gray-700">${error.message}</p>
+                            <p class="text-sm mt-3 text-red-500">Verifique su configuración de Firebase y recargue la página.</p>
+                        </div>
+                    </div>
+                `;
+                return null;
+            }
+        };
+        
+        // El resto de la lógica de React/JSX se mueve al bloque de Babel.
+    </script>
+
+    <!-- Bloque principal de React/JSX (REQUIERE BABEL) -->
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        // =================================================================================
+        // COMPONENTES REACT Y LÓGICA DE MONTAJE
+        // =================================================================================
+        
+        // Estado inicial de un Recurso (antes Artefacto)
+        const initialResource = { // Renombrado: initialArtifact -> initialResource
+            id: null,
+            title: "Nuevo Recurso", // Texto: Artefacto -> Recurso
+            content: "Escribe aquí la descripción o el código de tu recurso.", // Texto: artefacto -> recurso
+            timestamp: new Date(),
+            isPublic: false
+        };
+        
+        // Componente principal de la aplicación, recibe dependencias como props
+        function App({ db, globalUserId: userId, appId, firestore }) {
+            
+            // Desestructuración segura dentro del componente
+            const { doc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query } = firestore;
+
+            const [resources, setResources] = useState([]); // Renombrado: artifacts -> resources
+            const [selectedResource, setSelectedResource] = useState(null); // Renombrado: selectedArtifact -> selectedResource
+            const [isSaving, setIsSaving] = useState(false);
+            const [error, setError] = useState(null);
+            const [isAuthReady, setIsAuthReady] = useState(false);
+            
+            // Establecer el estado de autenticación como listo una vez que se reciben las props
+            useEffect(() => {
+                if (db && userId && appId) {
+                    setIsAuthReady(true);
+                }
+            }, [db, userId, appId]);
+
+
+            // -------------------------------------------------------------------------
+            // 1. GESTIÓN DE RUTA DE DATOS
+            // -------------------------------------------------------------------------
+            const getCollectionPath = useCallback(() => {
+                if (!appId || !userId) return null;
+                // Ruta privada: /artifacts/{appId}/users/{userId}/data_hub_resources (Cambiado de artifacts a resources en la colección)
+                return `artifacts/${appId}/users/${userId}/data_hub_resources`;
+            }, [appId, userId]);
+
+            // -------------------------------------------------------------------------
+            // 2. OBTENER DATOS (onSnapshot)
+            // -------------------------------------------------------------------------
+            useEffect(() => {
+                if (!isAuthReady) return;
+
+                const path = getCollectionPath();
+                if (!path) return;
+
+                const q = collection(db, path);
+                
+                // Suscripción en tiempo real a la colección de recursos (antes artefactos)
+                const unsubscribe = onSnapshot(q, (snapshot) => {
+                    const loadedResources = snapshot.docs.map(doc => ({ // Renombrado: loadedArtifacts -> loadedResources
+                        id: doc.id,
+                        ...doc.data(),
+                        // Asegurarse de que el timestamp sea un objeto Date
+                        timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : new Date(),
+                        content: doc.data().content,
+                    })).sort((a, b) => b.timestamp - a.timestamp); // Ordenar por fecha descendente
+
+                    setResources(loadedResources); // Renombrado: setArtifacts -> setResources
+
+                    // Lógica para mantener la selección o crear un nuevo recurso
+                    if (loadedResources.length === 0 && !selectedResource) {
+                        handleNewResource(); // Renombrado: handleNewArtifact -> handleNewResource
+                    } else if (selectedResource && !loadedResources.find(a => a.id === selectedResource.id) && !selectedResource.id.startsWith('temp-')) {
+                        setSelectedResource(loadedResources[0] || null); // Renombrado: setSelectedArtifact -> setSelectedResource
+                    } else if (!selectedResource && loadedResources.length > 0) {
+                        setSelectedResource(loadedResources[0]); // Renombrado: setSelectedArtifact -> setSelectedResource
+                    }
+
+                }, (err) => {
+                    console.error("Error al escuchar Firestore:", err);
+                    setError("Error al cargar recursos. Verifique la conexión o las reglas de seguridad."); // Texto: artefactos -> recursos
+                });
+
+                return () => unsubscribe(); // Limpiar el listener al desmontar
+
+            }, [isAuthReady, db, getCollectionPath]); 
+
+            // -------------------------------------------------------------------------
+            // 3. CRUD
+            // -------------------------------------------------------------------------
+
+            // Crear/Guardar
+            const handleSaveResource = async (resource) => { // Renombrado: handleSaveArtifact -> handleSaveResource (y parámetro)
+                if (!isAuthReady) {
+                    setError("Base de datos no disponible. Autenticación pendiente.");
+                    return;
+                }
+                
+                setIsSaving(true);
+                const path = getCollectionPath();
+                const now = new Date();
+
+                try {
+                    const resourceToSave = { // Renombrado: artifactToSave -> resourceToSave
+                        title: resource.title,
+                        content: resource.content,
+                        timestamp: now,
+                        userId: userId,
+                        isPublic: resource.isPublic || false,
+                    };
+
+                    if (resource.id && !resource.id.startsWith('temp-')) {
+                        // Actualizar
+                        const docRef = doc(db, path, resource.id);
+                        await updateDoc(docRef, resourceToSave);
+                        setSelectedResource(prev => ({ ...prev, ...resourceToSave })); // Renombrado: setSelectedArtifact -> setSelectedResource
+
+                    } else {
+                        // Crear nuevo
+                        const collectionRef = collection(db, path);
+                        const newDocRef = await addDoc(collectionRef, resourceToSave);
+                        setSelectedResource(prev => ({ // Renombrado: setSelectedArtifact -> setSelectedResource
+                            ...prev, 
+                            id: newDocRef.id, 
+                            timestamp: now,
+                        }));
+                    }
+
+                } catch (e) {
+                    console.error("Error al guardar recurso: ", e); // Texto: artefacto -> recurso
+                    setError(`No se pudo guardar el recurso: ${e.message}`); // Texto: artefacto -> recurso
+                } finally {
+                    setIsSaving(false);
+                }
+            };
+            
+            // Eliminar
+            const handleDeleteResource = (id) => { // Renombrado: handleDeleteArtifact -> handleDeleteResource
+                if (!isAuthReady) {
+                    setError("Base de datos no disponible.");
+                    return;
+                }
+                
+                // Usar prompt como alternativa a window.confirm()
+                const showConfirm = (message) => {
+                    const confirmAction = window.prompt(message + " Escriba 'SI' para confirmar:");
+                    return confirmAction && confirmAction.toUpperCase() === 'SI';
+                };
+
+                if (!showConfirm("¿Está seguro de que desea eliminar este recurso? Esta acción es irreversible.")) return; // Texto: artefacto -> recurso
+
+                const path = getCollectionPath();
+                // Función asíncrona para la eliminación
+                const performDelete = async () => {
+                    try {
+                        await deleteDoc(doc(db, path, id));
+                        setSelectedResource(null); // Limpiar la selección inmediatamente // Renombrado: setSelectedArtifact -> setSelectedResource
+                    } catch (e) {
+                        console.error("Error al eliminar recurso: ", e); // Texto: artefacto -> recurso
+                        setError("No se pudo eliminar el recurso."); // Texto: artefacto -> recurso
+                    }
+                };
+
+                performDelete();
+            };
+
+            // Nuevo
+            const handleNewResource = () => { // Renombrado: handleNewArtifact -> handleNewResource
+                setSelectedResource({ // Renombrado: setSelectedArtifact -> setSelectedResource
+                    ...initialResource, // Renombrado: initialArtifact -> initialResource
+                    id: `temp-${Date.now()}` 
+                });
+            };
+            
+            // -------------------------------------------------------------------------
+            // 4. Componentes UI
+            // -------------------------------------------------------------------------
+
+            // Componente de la lista lateral
+            const ResourceList = () => ( // Renombrado: ArtifactList -> ResourceList
+                <div className="w-1/4 p-4 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-indigo-700">Mis Recursos</h2> {/* Texto: Artefactos -> Recursos */}
+                        <button
+                            onClick={handleNewResource} // Renombrado: handleNewArtifact -> handleNewResource
+                            className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-lg text-sm font-medium transition duration-150 shadow-md"
+                        >
+                            + Nuevo
+                        </button>
+                    </div>
+                    {/* Mostrar ID de Usuario para depuración y colaboración */}
+                    <p className="text-xs text-gray-500 mb-4 truncate" title={userId}>
+                        ID de Usuario: <span className="font-mono text-gray-700 select-all">{userId || 'Cargando...'}</span>
+                    </p>
+                    
+                    {error && (
+                        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 text-sm rounded" role="alert">
+                            <p className="font-bold">Error</p>
+                            <p>{error}</p>
+                        </div>
+                    )}
+                    
+                    {resources.length === 0 && !selectedResource?.id.startsWith('temp-') && ( // Renombrado: artifacts -> resources, selectedArtifact -> selectedResource
+                        <p className="text-gray-500 italic">No hay recursos. Haz clic en '+ Nuevo' para empezar.</p> 
+                        // El comentario problemático fue eliminado de aquí.
+                    )}
+
+                    {resources.map(resource => ( // Renombrado: artifacts.map(artifact -> resources.map(resource
+                        <div
+                            key={resource.id}
+                            onClick={() => setSelectedResource(resource)} // Renombrado: setSelectedArtifact(artifact) -> setSelectedResource(resource)
+                            className={`p-3 mb-2 rounded-lg cursor-pointer transition duration-150 ${selectedResource?.id === resource.id // Renombrado: selectedArtifact?.id === artifact.id -> selectedResource?.id === resource.id
+                                ? 'bg-indigo-100 border-l-4 border-indigo-600 shadow-inner' 
+                                : 'bg-white hover:bg-gray-100 border border-gray-200'
+                            }`}
+                        >
+                            <h3 className="text-lg font-semibold truncate">{resource.title}</h3> {/* Renombrado: artifact.title -> resource.title */}
+                            <p className="text-xs text-gray-500">
+                                Guardado: {resource.timestamp.toLocaleDateString()} {resource.timestamp.toLocaleTimeString()} {/* Renombrado: artifact.timestamp -> resource.timestamp */}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            );
+
+            // Componente del editor
+            const ResourceEditor = () => { // Renombrado: ArtifactEditor -> ResourceEditor
+                if (!selectedResource) { // Renombrado: selectedArtifact -> selectedResource
+                    return (
+                        <div className="w-3/4 flex items-center justify-center p-8 text-gray-500">
+                            Selecciona un recurso o crea uno nuevo para comenzar a trabajar. {/* Texto: artefacto -> recurso */}
+                        </div>
+                    );
+                }
+
+                const isNew = selectedResource.id && selectedResource.id.startsWith('temp-'); // Renombrado: selectedArtifact -> selectedResource
+
+                return (
+                    <div className="w-3/4 p-6 flex flex-col h-full bg-white">
+                        <div className="flex justify-between items-center mb-4 border-b pb-4">
+                            <input
+                                type="text"
+                                value={selectedResource.title} // Renombrado: selectedArtifact -> selectedResource
+                                onChange={(e) => setSelectedResource(p => ({ ...p, title: e.target.value }))} // Renombrado: setSelectedArtifact -> setSelectedResource
+                                className="text-3xl font-extrabold text-gray-800 border-b-2 border-transparent focus:border-indigo-500 outline-none w-2/3 transition duration-200"
+                                placeholder="Título del Recurso" // Texto: Artefacto -> Recurso
+                            />
+                            <div className="flex space-x-2">
+                                {/* Botón de Guardar */}
+                                <button
+                                    onClick={() => handleSaveResource(selectedResource)} // Renombrado: handleSaveArtifact -> handleSaveResource (y parámetro)
+                                    disabled={isSaving || !selectedResource.title.trim() || !isAuthReady} // Renombrado: selectedArtifact -> selectedResource
+                                    className={`px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 ${isSaving || !isAuthReady
+                                        ? 'bg-indigo-300 text-indigo-800 cursor-not-allowed' 
+                                        : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg'
+                                    }`}
+                                >
+                                    {isSaving ? 'Guardando...' : (isNew ? 'Crear y Guardar' : 'Guardar')}
+                                </button>
+                                {/* Botón de Eliminar (solo si no es un recurso nuevo temporal) */}
+                                {!isNew && (
+                                    <button
+                                        onClick={() => handleDeleteResource(selectedResource.id)} // Renombrado: handleDeleteArtifact -> handleDeleteResource (y parámetro)
+                                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full font-bold text-sm shadow-lg transition duration-150"
+                                    >
+                                        Eliminar
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Área de Contenido */}
+                        <textarea
+                            value={selectedResource.content} // Renombrado: selectedArtifact -> selectedResource
+                            onChange={(e) => setSelectedResource(p => ({ ...p, content: e.target.value }))} // Renombrado: setSelectedArtifact -> setSelectedResource
+                            className="flex-grow p-4 border border-gray-300 rounded-lg text-gray-800 resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 font-mono text-sm"
+                            placeholder="Introduce el contenido (notas, código, markdown, etc.) aquí..."
+                        />
+                        
+                        <div className="mt-4 text-xs text-gray-500">
+                            Último Guardado: {selectedResource.timestamp ? selectedResource.timestamp.toLocaleString() : 'Nunca'} {/* Renombrado: selectedArtifact -> selectedResource */}
+                        </div>
+                    </div>
+                );
+            };
+
+            // -------------------------------------------------------------------------
+            // 5. RENDERIZADO PRINCIPAL
+            // -------------------------------------------------------------------------
+            
+            return (
+                <div className="flex h-full bg-gray-100"> 
+                    <ResourceList /> {/* Renombrado: ArtifactList -> ResourceList */}
+                    <ResourceEditor /> {/* Renombrado: ArtifactEditor -> ResourceEditor */}
+                </div>
+            );
+        }
+
+        // 1. Crear un contenedor que maneje la carga y la inicialización de Firebase
+        const RootComponent = () => {
+            const [data, setData] = React.useState(null);
+            const [loading, setLoading] = React.useState(true);
+            const [isError, setIsError] = React.useState(false);
+
+            React.useEffect(() => {
+                const init = async () => {
+                    // initializeFirebaseApp es una función de JS puro definida en el bloque 'module'
+                    const firebaseData = await window.initializeFirebaseApp(); 
+                    if (firebaseData) {
+                        setData(firebaseData);
+                    } else {
+                        // Si initializeFirebaseApp falló, ya se encargó de mostrar un mensaje de error HTML
+                        setIsError(true); 
+                    }
+                    setLoading(false);
+                };
+                init();
+            }, []);
+
+            if (loading) {
+                return (
+                    <div className="flex items-center justify-center h-full w-full bg-gray-50 absolute inset-0">
+                        <svg className="animate-spin -ml-1 mr-3 h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <p className="text-indigo-600 font-medium">Cargando Data Hub...</p>
+                    </div>
+                );
+            }
+            
+            // Si hubo un error en la inicialización (ya mostrado por JS puro)
+            if (isError) {
+                return null; 
+            }
+
+            // Una vez que los datos de Firebase están listos, renderizar la App
+            return <App {...data} />;
+        };
+
+        // Renderizado del componente raíz con la API de React 18
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<RootComponent />);
+    </script>
+</head>
+<body class="bg-gray-100">
+    <!-- El div root es donde se montará la aplicación React -->
+    <div id="root" class="h-full">
+        <!-- Contenido de carga inicial o error de Firebase -->
+    </div>
+</body>
+</html>
