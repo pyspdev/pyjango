@@ -7,8 +7,9 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav ms-auto">
+          <!-- Se ha sustituido el enlace 'blog:posts' (que causaba NoReverseMatch) por el nuevo Data Hub -->
           <li class="nav-item">
-            <a class="nav-link"  href="{% url 'blog:posts' %}">blog</a>
+            <a class="nav-link" href="{% url 'data_hub' %}">Data Hub</a>
           </li>
           <li class="nav-item d-flex align-items-center">
             <a class="btn tbn-primary btn-sm" href="{% static 'curriculum.pdf' %}" target="_blank"
