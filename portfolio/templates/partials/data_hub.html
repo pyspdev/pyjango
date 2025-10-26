@@ -28,23 +28,19 @@
         // Establecer nivel de log para depuración de Firestore
         setLogLevel('debug');
 
-        // FIGURACIÓN DE FIREBASE (Configuración obtenida de tu imagen)
-        const baseConfig = {
-            "apiKey": "AIzaSyBJZxuwRulQNQFozQZxxcZB6SccB1k",
-            "authDomain": "pyjango-cd5f.firebaseapp.com",
-            "projectId": "pyjango-cd5f",
-            "storageBucket": "pyjango-cd5f.appspot.com",
-            "messagingSenderId": "373327860323",
-            "appId": "1:373327860323:web:ee0aaab003fdf2e4638de56",
-        };
+        // =================================================================================
+        // CONFIGURACIÓN DE FIREBASE (USANDO VARIABLES GLOBALES DEL ENTORNO)
+        // =================================================================================
+        
+        // **IMPORTANTE: Se elimina baseConfig codificado para forzar el uso de las variables de Canvas**
         
         const rawAppId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const appId = rawAppId.replace(/[^a-zA-Z0-9-]/g, '_'); 
 
         const firebaseConfig = typeof __firebase_config !== 'undefined'
             ? JSON.parse(__firebase_config)
-            : baseConfig;
-        
+            : null; // Se usa 'null' si no está disponible para forzar el error de inicialización
+
         const initialAuthToken = typeof __initial_auth_token !== 'undefined'
             ? __initial_auth_token
             : null;
@@ -54,8 +50,9 @@
          */
         window.initializeFirebaseApp = async () => {
             try {
-                if (!firebaseConfig || Object.keys(firebaseConfig).length < 5) {
-                    throw new Error("La configuración de Firebase está vacía o es inválida.");
+                // Validación estricta para asegurar que la configuración es válida
+                if (!firebaseConfig || typeof firebaseConfig !== 'object' || !firebaseConfig.apiKey) {
+                    throw new Error("La configuración de Firebase está vacía o es inválida. Asegúrese de que el entorno Canvas la ha proporcionado.");
                 }
 
                 const app = initializeApp(firebaseConfig);
@@ -101,7 +98,7 @@
                         <div class="bg-white p-6 rounded-xl shadow-2xl border-4 border-red-500 text-center max-w-sm">
                             <h2 class="text-xl font-bold text-red-700 mb-2">Error de Conexión</h2>
                             <p class="text-gray-700">${error.message}</p>
-                            <p class="text-sm mt-3 text-red-500">Verifique su configuración de Firebase y recargue la página.</p>
+                            <p class="text-sm mt-3 text-red-500">Verifique la configuración inyectada por el entorno y recargue la página.</p>
                         </div>
                     </div>
                 `;
@@ -316,7 +313,6 @@
                     
                     {resources.length === 0 && !selectedResource?.id.startsWith('temp-') && ( // Renombrado: artifacts -> resources, selectedArtifact -> selectedResource
                         <p className="text-gray-500 italic">No hay recursos. Haz clic en '+ Nuevo' para empezar.</p> 
-                        // El comentario problemático fue eliminado de aquí.
                     )}
 
                     {resources.map(resource => ( // Renombrado: artifacts.map(artifact -> resources.map(resource
