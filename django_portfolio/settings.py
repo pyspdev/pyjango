@@ -7,13 +7,18 @@ For more information on this file, see
 https://docs.djangoproject.com/en/4.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/4.2/ref/settings/
+https://docs.djangoproject.com/en/4.2/ref/settings/#__file__
 """
 
 from pathlib import Path
+# Importamos 'os' para manejar rutas, aunque 'Path' ya está definido. 
+# Para compatibilidad con la estructura tradicional de Django:
+import os 
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Importante: BASE_DIR apunta a la carpeta principal de tu proyecto ('/home/pyjango/django_portfolio').
 
 
 # Quick-start development settings - unsuitable for production
@@ -42,6 +47,8 @@ INSTALLED_APPS = [
     'portfolio',
 ]
 
+# ... [MIDDLEWARE - Sin cambios] ...
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -54,11 +61,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_portfolio.urls'
 
+# --- SECCIÓN CRÍTICA DE MODIFICACIÓN ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        # **CAMBIO CRÍTICO:** Agregamos BASE_DIR a la lista DIRS. 
+        # Esto le dice a Django que busque plantillas ('data_hub.html') 
+        # en la carpeta raíz del proyecto, además de las carpetas 'templates' de las apps.
+        'DIRS': [os.path.join(BASE_DIR)], 
+        'APP_DIRS': True, # Esto mantiene la búsqueda dentro de las carpetas 'templates' de las apps.
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -69,6 +80,8 @@ TEMPLATES = [
         },
     },
 ]
+# --- FIN DE SECCIÓN CRÍTICA ---
+
 
 WSGI_APPLICATION = 'django_portfolio.wsgi.application'
 
@@ -85,6 +98,7 @@ DATABASES = {
        'PORT':'3306',
     }
 }
+# Importante: Esta sección de DATABASES es crucial para tu conexión MySQL.
 
 
 # Password validation
