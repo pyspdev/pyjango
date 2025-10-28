@@ -11,8 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/#__file__
 """
 
 from pathlib import Path
-# Importamos 'os' para manejar rutas, aunque 'Path' ya está definido. 
-# Para compatibilidad con la estructura tradicional de Django:
+# Importamos 'os' para manejar rutas
 import os 
 
 
@@ -61,15 +60,19 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'django_portfolio.urls'
 
-# --- SECCIÓN CRÍTICA DE MODIFICACIÓN ---
+# --- SECCIÓN TEMPLATES CORREGIDA ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        # **CAMBIO CRÍTICO:** Agregamos BASE_DIR a la lista DIRS. 
-        # Esto le dice a Django que busque plantillas ('data_hub.html') 
-        # en la carpeta raíz del proyecto, además de las carpetas 'templates' de las apps.
-        'DIRS': [os.path.join(BASE_DIR)], 
-        'APP_DIRS': True, # Esto mantiene la búsqueda dentro de las carpetas 'templates' de las apps.
+        # DIRS: Busca plantillas en una carpeta 'templates' a nivel de proyecto (si existe).
+        # Aquí buscará tu archivo 'data_hub.html' si lo tienes en la raíz 'pyjango/templates/'.
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], 
+        
+        # APP_DIRS: CRUCIAL. Esto le dice a Django que busque en la subcarpeta 
+        # 'templates' de CADA aplicación listada en INSTALLED_APPS 
+        # (e.g., portfolio/templates/home.html).
+        'APP_DIRS': True, 
+        
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -80,7 +83,7 @@ TEMPLATES = [
         },
     },
 ]
-# --- FIN DE SECCIÓN CRÍTICA ---
+# --- FIN DE SECCIÓN TEMPLATES CORREGIDA ---
 
 
 WSGI_APPLICATION = 'django_portfolio.wsgi.application'
@@ -90,12 +93,12 @@ WSGI_APPLICATION = 'django_portfolio.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DATABASES = {
     'default': {
-       'ENGINE': 'django.db.backends.mysql',
-       'NAME': 'pyjango$default',
-       'USER': 'pyjango',
-       'PASSWORD': 'Brainstorm13',
-       'HOST':'pyjango.mysql.pythonanywhere-services.com',
-       'PORT':'3306',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'pyjango$default',
+        'USER': 'pyjango',
+        'PASSWORD': 'Brainstorm13',
+        'HOST':'pyjango.mysql.pythonanywhere-services.com',
+        'PORT':'3306',
     }
 }
 # Importante: Esta sección de DATABASES es crucial para tu conexión MySQL.
@@ -136,8 +139,20 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# --- INICIO DE CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (CORREGIDA) ---
+# STATICFILES_DIRS: Le dice a Django dónde buscar archivos estáticos en MODO DEBUG
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'portfolio', 'static'), # Busca dentro de 'portfolio/static/'
+]
+
+# STATIC_ROOT: Dónde se copiarán todos los estáticos en MODO PRODUCCIÓN (PythonAnywhere)
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# --- FIN DE CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS (CORREGIDA) ---
+
 MEDIA_ROOT = BASE_DIR / 'MEDIA'
 MEDIA_URL = '/public/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
