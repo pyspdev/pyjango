@@ -9,7 +9,8 @@ class DataHubView(TemplateView):
     Vista personalizada para el Data Hub que inyecta las variables de configuración
     de Firebase necesarias para el frontend.
     """
-    template_name = 'portfolio/templates/data_hub.html'
+    #  template_name = 'portfolio/templates/data_hub.html'
+    template_name = 'data_hub.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
